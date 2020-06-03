@@ -1,86 +1,98 @@
-import paho.mqtt.client as paho
+import serial
 
 import time
 
 
-# https://os.mbed.com/teams/mqtt/wiki/Using-MQTT#python-client
+# XBee setting
+
+serdev = '/dev/ttyUSB0'
+
+s = serial.Serial(serdev, 9600, timeout=3)
 
 
-# MQTT broker hosted on local machine
+s.write('+++'.encode())
 
-mqttc = paho.Client()
+char = s.read(3)
 
+print('Enter AT mode.')
 
-# Settings for connection
-
-# TODO: revise host to your ip
-
-host = "192.168.1.113"
-
-topic = "Mbed"
+print(char.decode())
 
 
-# Callbacks
+s.write('ATMY 0x140\r\n'.encode())
 
-def on_connect(self, mosq, obj, rc):
+char = s.read(3)
 
-      print("Connected rc: " + str(rc))
+print('Set MY 0x140.')
 
-
-def on_message(mosq, obj, msg):
-
-      print("[Received] Topic: " + msg.topic + ", Message: " + str(msg.payload) + "\n");
+print(char.decode())
 
 
-def on_subscribe(mosq, obj, mid, granted_qos):
+s.write('ATDL 0x240\r\n'.encode())
 
-      print("Subscribed OK")
+char = s.read(3)
 
+print('Set DL 0x240.')
 
-def on_unsubscribe(mosq, obj, mid, granted_qos):
-
-      print("Unsubscribed OK")
-
-
-# Set callbacks
-
-mqttc.on_message = on_message
-
-mqttc.on_connect = on_connect
-
-mqttc.on_subscribe = on_subscribe
-
-mqttc.on_unsubscribe = on_unsubscribe
+print(char.decode())
 
 
-# Connect and subscribe
+s.write('ATID 0x1\r\n'.encode())
 
-print("Connecting to " + host + "/" + topic)
+char = s.read(3)
 
-mqttc.connect(host, port=1883, keepalive=60)
+print('Set PAN ID 0x1.')
 
-mqttc.subscribe(topic, 0)
-
-
-# Publish messages from Python
-
-num = 0
-
-while num != 5:
-
-      ret = mqttc.publish(topic, "Message from Python!\n", qos=0)
-
-      if (ret[0] != 0):
-
-            print("Publish failed")
-
-      mqttc.loop()
-
-      time.sleep(1.5)
-
-      num += 1
+print(char.decode())
 
 
-# Loop forever, receiving messages
+s.write('ATWR\r\n'.encode())
 
-mqttc.loop_forever()
+char = s.read(3)
+
+print('Write config.')
+
+print(char.decode())
+
+
+s.write('ATCN\r\n'.encode())
+
+char = s.read(3)
+
+print('Exit AT mode.')
+
+print(char.decode())
+
+
+print('')
+
+print('Start Communication')
+
+send = 'start'
+
+while send!='stop':
+
+    print('Which one do you want?')
+
+    send = input()
+
+    if (send=='a' or send == 'b'):
+
+        # send to remote
+
+        s.write(send.encode())
+
+        line = s.read(20)
+
+        if len(line) < 20:
+
+            print('No response')
+
+        else:
+
+            print(line.decode())
+
+        print('')
+
+
+s.close()
