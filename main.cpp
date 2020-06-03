@@ -39,6 +39,7 @@ I2C i2c( PTD9,PTD8);
 RawSerial pc(USBTX, USBRX);
 RawSerial xbee(D12, D11);
 int m_addr = FXOS8700CQ_SLAVE_ADDR1;
+float vel;
 
 EventQueue queue(32 * EVENTS_EVENT_SIZE);
 Thread t;
@@ -73,7 +74,7 @@ void publish_message(MQTT::Client<MQTTNetwork, Countdown>* client, float t[3]) {
       message_num++;
       MQTT::Message message;
       char buff[100];
-      sprintf(buff, "FXOS8700Q ACC: X=%1.4f Y=%1.4f Z=%1.4f\r\n", t[0], t[1], t[2]);
+      sprintf(buff, "FXOS8700Q ACC: velocity=%1.4f",vel);
       message.qos = MQTT::QOS0;
       message.retained = false;
       message.dup = false;
@@ -226,7 +227,7 @@ void check_addr(char *xbee_reply, char *messenger){
 
 void getAcc(Arguments *in, Reply *out) {
    int16_t acc16;
-   float t[3],vel;
+   float t[3];
    uint8_t res[6];
    FXOS8700CQ_readRegs(FXOS8700Q_OUT_X_MSB, res, 6);
 
